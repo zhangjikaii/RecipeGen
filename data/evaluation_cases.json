@@ -1,0 +1,1087 @@
+[
+  {
+    "id": "s001",
+    "question": "我有番茄和鸡蛋，想做十分钟以内的菜。",
+    "constraints": {
+      "available_ingredients": [
+        "番茄",
+        "鸡蛋"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 10,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r001"
+    ],
+    "expected_status": "ok",
+    "category": "structured/exact_inventory"
+  },
+  {
+    "id": "s002",
+    "question": "只有土豆，十五分钟以内可以做哪些菜？",
+    "constraints": {
+      "available_ingredients": [
+        "土豆"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r002",
+      "r017"
+    ],
+    "expected_status": "ok",
+    "category": "structured/single_ingredient"
+  },
+  {
+    "id": "s003",
+    "question": "只有豆腐，十五分钟以内可以做哪些菜？",
+    "constraints": {
+      "available_ingredients": [
+        "豆腐"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r003",
+      "r016"
+    ],
+    "expected_status": "ok",
+    "category": "structured/single_ingredient"
+  },
+  {
+    "id": "s004",
+    "question": "有蘑菇和青菜，十五分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "蘑菇",
+        "青菜"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r004"
+    ],
+    "expected_status": "ok",
+    "category": "structured/exact_inventory"
+  },
+  {
+    "id": "s005",
+    "question": "有青椒和猪肉，二十分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "青椒",
+        "猪肉"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 20,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r005"
+    ],
+    "expected_status": "ok",
+    "category": "structured/exact_inventory"
+  },
+  {
+    "id": "s006",
+    "question": "有米饭和鸡蛋，十五分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "米饭",
+        "鸡蛋"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r006"
+    ],
+    "expected_status": "ok",
+    "category": "structured/exact_inventory"
+  },
+  {
+    "id": "s007",
+    "question": "有番茄和豆腐，十五分钟以内都能做什么？",
+    "constraints": {
+      "available_ingredients": [
+        "番茄",
+        "豆腐"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r003",
+      "r007",
+      "r016"
+    ],
+    "expected_status": "ok",
+    "category": "structured/subset_inventory"
+  },
+  {
+    "id": "s008",
+    "question": "有黄瓜和鸡蛋，十分钟以内都能做什么？",
+    "constraints": {
+      "available_ingredients": [
+        "黄瓜",
+        "鸡蛋"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 10,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r008",
+      "r013"
+    ],
+    "expected_status": "ok",
+    "category": "structured/subset_inventory"
+  },
+  {
+    "id": "s009",
+    "question": "有土豆和鸡肉，三十五分钟以内都能做什么？",
+    "constraints": {
+      "available_ingredients": [
+        "土豆",
+        "鸡肉"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 35,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r002",
+      "r009",
+      "r017"
+    ],
+    "expected_status": "ok",
+    "category": "structured/time_boundary"
+  },
+  {
+    "id": "s010",
+    "question": "有香菇和鸡肉，三十分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "香菇",
+        "鸡肉"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 30,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r010"
+    ],
+    "expected_status": "ok",
+    "category": "structured/time_boundary"
+  },
+  {
+    "id": "s011",
+    "question": "有西兰花和虾仁，十五分钟以内都能做什么？",
+    "constraints": {
+      "available_ingredients": [
+        "西兰花",
+        "虾仁"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r011",
+      "r012"
+    ],
+    "expected_status": "ok",
+    "category": "structured/subset_inventory"
+  },
+  {
+    "id": "s012",
+    "question": "只有西兰花，十分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "西兰花"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 10,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r012"
+    ],
+    "expected_status": "ok",
+    "category": "structured/time_boundary"
+  },
+  {
+    "id": "s013",
+    "question": "只有黄瓜，八分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "黄瓜"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 8,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r013"
+    ],
+    "expected_status": "ok",
+    "category": "structured/time_boundary"
+  },
+  {
+    "id": "s014",
+    "question": "有青椒和土豆，十五分钟以内都能做什么？",
+    "constraints": {
+      "available_ingredients": [
+        "青椒",
+        "土豆"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r002",
+      "r014",
+      "r017"
+    ],
+    "expected_status": "ok",
+    "category": "structured/subset_inventory"
+  },
+  {
+    "id": "s015",
+    "question": "有蘑菇和米饭，十二分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "蘑菇",
+        "米饭"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 12,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r015"
+    ],
+    "expected_status": "ok",
+    "category": "structured/exact_inventory"
+  },
+  {
+    "id": "s016",
+    "question": "只有豆腐，十二分钟以内，想吃辣菜。",
+    "constraints": {
+      "available_ingredients": [
+        "豆腐"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 12,
+      "required_tags": [
+        "辣"
+      ],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r016"
+    ],
+    "expected_status": "ok",
+    "category": "structured/required_tag"
+  },
+  {
+    "id": "s017",
+    "question": "只有土豆，十二分钟以内，想吃辣菜。",
+    "constraints": {
+      "available_ingredients": [
+        "土豆"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 12,
+      "required_tags": [
+        "辣"
+      ],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r017"
+    ],
+    "expected_status": "ok",
+    "category": "structured/required_tag"
+  },
+  {
+    "id": "s018",
+    "question": "有番茄和牛肉，二十五分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "番茄",
+        "牛肉"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 25,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r018"
+    ],
+    "expected_status": "ok",
+    "category": "structured/exact_inventory"
+  },
+  {
+    "id": "s019",
+    "question": "有芹菜和猪肉，十五分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "芹菜",
+        "猪肉"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r019"
+    ],
+    "expected_status": "ok",
+    "category": "structured/exact_inventory"
+  },
+  {
+    "id": "s020",
+    "question": "有豆腐和香菇，二十分钟以内都能做什么？",
+    "constraints": {
+      "available_ingredients": [
+        "豆腐",
+        "香菇"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 20,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r003",
+      "r016",
+      "r020"
+    ],
+    "expected_status": "ok",
+    "category": "structured/subset_inventory"
+  },
+  {
+    "id": "s021",
+    "question": "主料齐全，推荐十五分钟以内、不辣的素食菜。",
+    "constraints": {
+      "available_ingredients": [
+        "番茄",
+        "鸡蛋",
+        "土豆",
+        "豆腐",
+        "蘑菇",
+        "青菜",
+        "青椒",
+        "猪肉",
+        "米饭",
+        "黄瓜",
+        "鸡肉",
+        "香菇",
+        "西兰花",
+        "虾仁",
+        "牛肉",
+        "芹菜"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [
+        "不辣",
+        "素食"
+      ],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r002",
+      "r003",
+      "r004",
+      "r007",
+      "r012",
+      "r013",
+      "r014",
+      "r015"
+    ],
+    "expected_status": "ok",
+    "category": "structured/multiple_required_tags"
+  },
+  {
+    "id": "s022",
+    "question": "只有土豆，最多十分钟，不允许缺少主料。",
+    "constraints": {
+      "available_ingredients": [
+        "土豆"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 10,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [],
+    "expected_status": "no_match",
+    "category": "structured/time_no_match"
+  },
+  {
+    "id": "s023",
+    "question": "我有土豆，但不能用土豆，十五分钟以内。",
+    "constraints": {
+      "available_ingredients": [
+        "土豆"
+      ],
+      "excluded_ingredients": [
+        "土豆"
+      ],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [],
+    "expected_status": "no_match",
+    "category": "structured/exclusion_no_match"
+  },
+  {
+    "id": "s024",
+    "question": "我有番茄和鸡蛋，但不能吃鸡蛋，十分钟以内。",
+    "constraints": {
+      "available_ingredients": [
+        "番茄",
+        "鸡蛋"
+      ],
+      "excluded_ingredients": [
+        "鸡蛋"
+      ],
+      "max_minutes": 10,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [],
+    "expected_status": "no_match",
+    "category": "structured/exclusion_no_match"
+  },
+  {
+    "id": "s025",
+    "question": "我有豆腐和香菇，但不用香菇，二十分钟以内。",
+    "constraints": {
+      "available_ingredients": [
+        "豆腐",
+        "香菇"
+      ],
+      "excluded_ingredients": [
+        "香菇"
+      ],
+      "max_minutes": 20,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r003",
+      "r016"
+    ],
+    "expected_status": "ok",
+    "category": "structured/exclusion_filter"
+  },
+  {
+    "id": "s026",
+    "question": "我有西红柿和鸡蛋，十分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "西红柿",
+        "鸡蛋"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 10,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r001"
+    ],
+    "expected_status": "ok",
+    "category": "structured/ingredient_alias"
+  },
+  {
+    "id": "s027",
+    "question": "我有马铃薯和青椒，十五分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "马铃薯",
+        "青椒"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r002",
+      "r014",
+      "r017"
+    ],
+    "expected_status": "ok",
+    "category": "structured/ingredient_alias"
+  },
+  {
+    "id": "s028",
+    "question": "我有青瓜和鸡蛋，十分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "青瓜",
+        "鸡蛋"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 10,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r008",
+      "r013"
+    ],
+    "expected_status": "ok",
+    "category": "structured/ingredient_alias"
+  },
+  {
+    "id": "s029",
+    "question": "我有白饭和鲜蘑菇，十二分钟以内做菜。",
+    "constraints": {
+      "available_ingredients": [
+        "白饭",
+        "鲜蘑菇"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 12,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r015"
+    ],
+    "expected_status": "ok",
+    "category": "structured/ingredient_alias"
+  },
+  {
+    "id": "s030",
+    "question": "主料齐全，不能吃猪肉，十二分钟以内想吃辣菜。",
+    "constraints": {
+      "available_ingredients": [
+        "番茄",
+        "鸡蛋",
+        "土豆",
+        "豆腐",
+        "蘑菇",
+        "青菜",
+        "青椒",
+        "猪肉",
+        "米饭",
+        "黄瓜",
+        "鸡肉",
+        "香菇",
+        "西兰花",
+        "虾仁",
+        "牛肉",
+        "芹菜"
+      ],
+      "excluded_ingredients": [
+        "猪肉"
+      ],
+      "max_minutes": 12,
+      "required_tags": [
+        "辣"
+      ],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r016",
+      "r017"
+    ],
+    "expected_status": "ok",
+    "category": "structured/exclusion_and_tag"
+  },
+  {
+    "id": "s031",
+    "question": "只有番茄，可以补买缺少的主料，十五分钟以内、不辣的素食菜。",
+    "constraints": {
+      "available_ingredients": [
+        "番茄"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [
+        "不辣",
+        "素食"
+      ],
+      "allow_missing": true,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r002",
+      "r003",
+      "r004",
+      "r007",
+      "r012",
+      "r013",
+      "r014",
+      "r015"
+    ],
+    "expected_status": "ok",
+    "category": "structured/allow_missing"
+  },
+  {
+    "id": "s032",
+    "question": "只有西兰花，可补买主料，十五分钟以内；不用番茄、鸡蛋、土豆、豆腐、蘑菇、青菜、青椒、猪肉、米饭、黄瓜、鸡肉、香菇、牛肉、芹菜。",
+    "constraints": {
+      "available_ingredients": [
+        "西兰花"
+      ],
+      "excluded_ingredients": [
+        "番茄",
+        "鸡蛋",
+        "土豆",
+        "豆腐",
+        "蘑菇",
+        "青菜",
+        "青椒",
+        "猪肉",
+        "米饭",
+        "黄瓜",
+        "鸡肉",
+        "香菇",
+        "牛肉",
+        "芹菜"
+      ],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": true,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r011",
+      "r012"
+    ],
+    "expected_status": "ok",
+    "category": "structured/missing_does_not_relax_exclusion"
+  },
+  {
+    "id": "n001",
+    "question": "家里有西红柿和鸡蛋，十分钟内能做什么？",
+    "constraints": {
+      "available_ingredients": [
+        "番茄",
+        "鸡蛋"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 10,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r001"
+    ],
+    "expected_status": "ok",
+    "category": "nl/alias_and_chinese_minutes"
+  },
+  {
+    "id": "n002",
+    "question": "我只有马铃薯，15分钟内，不吃辣。",
+    "constraints": {
+      "available_ingredients": [
+        "土豆"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [
+        "不辣"
+      ],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r002"
+    ],
+    "expected_status": "ok",
+    "category": "nl/alias_and_negative_spicy"
+  },
+  {
+    "id": "n003",
+    "question": "库存是青瓜和鸡蛋，最多10分钟，不买别的主料。",
+    "constraints": {
+      "available_ingredients": [
+        "黄瓜",
+        "鸡蛋"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 10,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r008",
+      "r013"
+    ],
+    "expected_status": "ok",
+    "category": "nl/alias_and_inventory"
+  },
+  {
+    "id": "n004",
+    "question": "有豆腐和香菇，但不要香菇，15分钟内，不辣。",
+    "constraints": {
+      "available_ingredients": [
+        "豆腐",
+        "香菇"
+      ],
+      "excluded_ingredients": [
+        "香菇"
+      ],
+      "max_minutes": 15,
+      "required_tags": [
+        "不辣"
+      ],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r003"
+    ],
+    "expected_status": "ok",
+    "category": "nl/negative_ingredient"
+  },
+  {
+    "id": "n005",
+    "question": "我有番茄和豆腐，15分钟以内，不要辣的。",
+    "constraints": {
+      "available_ingredients": [
+        "番茄",
+        "豆腐"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [
+        "不辣"
+      ],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r003",
+      "r007"
+    ],
+    "expected_status": "ok",
+    "category": "nl/negative_spicy"
+  },
+  {
+    "id": "n006",
+    "question": "土豆和鸡肉都有，半小时以内，不缺主料才推荐。",
+    "constraints": {
+      "available_ingredients": [
+        "土豆",
+        "鸡肉"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 30,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r002",
+      "r017"
+    ],
+    "expected_status": "ok",
+    "category": "nl/half_hour"
+  },
+  {
+    "id": "n007",
+    "question": "只有米饭和鸡蛋，最多10分钟，不能缺主料。",
+    "constraints": {
+      "available_ingredients": [
+        "米饭",
+        "鸡蛋"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 10,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [],
+    "expected_status": "no_match",
+    "category": "nl/time_no_match"
+  },
+  {
+    "id": "n008",
+    "question": "只有牛肉，不买其他主料，推荐一道菜。",
+    "constraints": {
+      "available_ingredients": [
+        "牛肉"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": null,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [],
+    "expected_status": "no_match",
+    "category": "nl/inventory_no_match"
+  },
+  {
+    "id": "n009",
+    "question": "只有土豆，想吃辣，12分钟内，可以补买缺少的主料，请列出缺料。",
+    "constraints": {
+      "available_ingredients": [
+        "土豆"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 12,
+      "required_tags": [
+        "辣"
+      ],
+      "allow_missing": true,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r016",
+      "r017"
+    ],
+    "expected_status": "ok",
+    "category": "nl/allow_missing"
+  },
+  {
+    "id": "n010",
+    "question": "我有豆腐，想吃辣，最多10分钟，允许缺少食材。",
+    "constraints": {
+      "available_ingredients": [
+        "豆腐"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 10,
+      "required_tags": [
+        "辣"
+      ],
+      "allow_missing": true,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [],
+    "expected_status": "no_match",
+    "category": "nl/missing_does_not_relax_time"
+  },
+  {
+    "id": "n011",
+    "question": "我有豆腐，12分钟以内做辣的素食，不能用土豆，可以补买缺少的主料。",
+    "constraints": {
+      "available_ingredients": [
+        "豆腐"
+      ],
+      "excluded_ingredients": [
+        "土豆"
+      ],
+      "max_minutes": 12,
+      "required_tags": [
+        "辣",
+        "素食"
+      ],
+      "allow_missing": true,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r016"
+    ],
+    "expected_status": "ok",
+    "category": "nl/missing_does_not_relax_exclusion"
+  },
+  {
+    "id": "n012",
+    "question": "家里有土豆、豆腐和番茄，20分钟以内做素食，不要辣。",
+    "constraints": {
+      "available_ingredients": [
+        "土豆",
+        "豆腐",
+        "番茄"
+      ],
+      "excluded_ingredients": [],
+      "max_minutes": 20,
+      "required_tags": [
+        "素食",
+        "不辣"
+      ],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r002",
+      "r003",
+      "r007"
+    ],
+    "expected_status": "ok",
+    "category": "nl/multiple_constraints"
+  },
+  {
+    "id": "n013",
+    "question": "做什么菜好？",
+    "constraints": {
+      "available_ingredients": [],
+      "excluded_ingredients": [],
+      "max_minutes": null,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [],
+    "expected_status": "needs_clarification",
+    "category": "nl/missing_inventory_clarification"
+  },
+  {
+    "id": "n014",
+    "question": "帮我推荐15分钟内不辣的菜。",
+    "constraints": {
+      "available_ingredients": [],
+      "excluded_ingredients": [],
+      "max_minutes": 15,
+      "required_tags": [
+        "不辣"
+      ],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [],
+    "expected_status": "needs_clarification",
+    "category": "nl/missing_inventory_clarification"
+  },
+  {
+    "id": "n015",
+    "question": "我没有现成主料，允许缺少食材，想要12分钟以内的辣菜。",
+    "constraints": {
+      "available_ingredients": [],
+      "excluded_ingredients": [],
+      "max_minutes": 12,
+      "required_tags": [
+        "辣"
+      ],
+      "allow_missing": true,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [
+      "r016",
+      "r017"
+    ],
+    "expected_status": "ok",
+    "category": "nl/empty_inventory_allow_missing"
+  },
+  {
+    "id": "n016",
+    "question": "我有黄瓜，8分钟内，但是不能用黄瓜。",
+    "constraints": {
+      "available_ingredients": [
+        "黄瓜"
+      ],
+      "excluded_ingredients": [
+        "黄瓜"
+      ],
+      "max_minutes": 8,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [],
+    "expected_status": "no_match",
+    "category": "nl/conflicting_inventory_and_exclusion"
+  },
+  {
+    "id": "n017",
+    "question": "我有鸡蛋和米饭，但不能吃鸡蛋，15分钟以内，不缺主料才推荐。",
+    "constraints": {
+      "available_ingredients": [
+        "鸡蛋",
+        "米饭"
+      ],
+      "excluded_ingredients": [
+        "鸡蛋"
+      ],
+      "max_minutes": 15,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [],
+    "expected_status": "no_match",
+    "category": "nl/negative_not_available"
+  },
+  {
+    "id": "n018",
+    "question": "只有黄瓜，8分钟内，不能放盐。",
+    "constraints": {
+      "available_ingredients": [
+        "黄瓜"
+      ],
+      "excluded_ingredients": [
+        "盐"
+      ],
+      "max_minutes": 8,
+      "required_tags": [],
+      "allow_missing": false,
+      "top_k": 3
+    },
+    "expected_recipe_ids": [],
+    "expected_status": "no_match",
+    "category": "nl/seasoning_exclusion"
+  }
+]
