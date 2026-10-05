@@ -1,0 +1,34 @@
+{
+  "recipe_label": "Recipe",
+  "dataset": {
+    "id": "your-recipegen-graph",
+    "name": "原 RecipeGen 图谱导出",
+    "is_demo": false,
+    "description": "参考原技术文档中的 Recipe / Ingredient / Step schema，运行前请核对实际数据库",
+    "source": "用户原有 Neo4j 图谱；原文档提及 HF RUOXUAN123/RecipeGen",
+    "license": "未确认；发布前核对原始数据授权"
+  },
+  "ingredient_aliases": {},
+  "fields": {
+    "id": {"property": "recipe_id"},
+    "name": {"property": "title"},
+    "minutes": {"unrecorded": true},
+    "ingredients": {
+      "relationship": "HAS_INGREDIENT",
+      "direction": "out",
+      "target_label": "Ingredient",
+      "property_fallbacks": ["normalized_name", "name"]
+    },
+    "seasonings": {"unrecorded": true},
+    "tags": {"unrecorded": true},
+    "steps": {
+      "relationship": "HAS_STEP",
+      "direction": "out",
+      "target_label": "Step",
+      "property": "text",
+      "order_property": "order",
+      "order_on": "node"
+    }
+  },
+  "source": {"internal_record": true, "recipe_id_property": "recipe_id"}
+}
