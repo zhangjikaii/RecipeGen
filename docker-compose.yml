@@ -1,0 +1,21 @@
+# Optional local Neo4j sandbox. Start explicitly with: docker compose up -d
+# This does not connect to or modify an existing remote Neo4j database.
+services:
+  neo4j:
+    image: neo4j:2026.09.0
+    ports:
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
+    environment:
+      NEO4J_AUTH: "neo4j/${NEO4J_PASSWORD:?Set NEO4J_PASSWORD before starting Neo4j}"
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 256m
+    volumes:
+      - recipegen_neo4j_data:/data
+      - recipegen_neo4j_logs:/logs
+    restart: "no"
+
+volumes:
+  recipegen_neo4j_data:
+  recipegen_neo4j_logs:

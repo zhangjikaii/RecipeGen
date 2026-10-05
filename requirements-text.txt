@@ -1,0 +1,8 @@
+# 已在本机实际使用的离线 E5 编码运行时；复用 .venv-mm，不启动媒体任务。
+torch==2.8.0
+transformers==4.57.1
+huggingface-hub==0.36.0
+tokenizers==0.22.2
+safetensors==0.8.0
+sentencepiece==0.2.2
+neo4j==6.3.1
