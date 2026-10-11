@@ -183,14 +183,14 @@ def test_catalog_evidence_failures_remain_503(tmp_path):
     assert "private invalid fact" not in response.text
 
 
-def test_frontend_generation_limit_matches_public_request_contract():
+def test_frontend_chat_limit_matches_public_request_contract():
     from pathlib import Path
     import re
-    from recipegen.system_api_models import GenerateRequest
-    html = (Path(__file__).resolve().parents[1] / "static/index.html").read_text()
-    field = re.search(r'<textarea\b[^>]*\bid="generation-question"[^>]*>', html).group()
-    assert 'maxlength="500"' in field
-    assert GenerateRequest(question="x" * 500).question == "x" * 500
+    from recipegen.system_api_models import ChatRequest
+    html = (Path(__file__).resolve().parents[1] / "static/compose.html").read_text()
+    field = re.search(r'<textarea\b[^>]*\bid="chat-input"[^>]*>', html).group()
+    assert 'maxlength="1000"' in field
+    assert ChatRequest(message="x" * 1000).message == "x" * 1000
 
 
 def test_retrieval_mode_is_forwarded_to_graph_workflow(tmp_path):
@@ -230,6 +230,25 @@ def test_omitted_retrieval_mode_uses_server_configuration(tmp_path):
         assert retriever.calls[-1]["mode"] == "keyword"
         assert client.post("/api/generate", json={"question": "番茄怎么做"}).status_code == 200
         assert retriever.calls[-1]["mode"] == "keyword"
+
+
+def test_default_hybrid_and_retrieval_stage_trace_are_preserved(tmp_path):
+    class TracedRetriever(Retriever):
+        def search(self, *args, **kwargs):
+            found = super().search(*args, **kwargs)
+            found["trace"] = [{"stage": "rrf_fusion", "status": "ok"},
+                              {"stage": "graph_evidence_expansion", "status": "ok"}]
+            return found
+
+    catalog = Catalog()
+    retriever = TracedRetriever(catalog)
+    with TestClient(create_app(Settings(), catalog=catalog, generator=Generator(), retriever=retriever)) as client:
+        search = client.post("/api/search", json={"query": "番茄"}).json()
+        assert retriever.calls[-1]["mode"] == "hybrid"
+        assert [stage["stage"] for stage in search["trace"][:2]] == ["rrf_fusion", "graph_evidence_expansion"]
+        generated = client.post("/api/generate", json={"question": "番茄怎么做"}).json()
+        assert retriever.calls[-1]["mode"] == "hybrid"
+        assert [stage["stage"] for stage in generated["trace"][:2]] == ["rrf_fusion", "graph_evidence_expansion"]
 
 
 def test_semantic_unavailable_has_same_safe_message_on_search_and_generate(tmp_path):
