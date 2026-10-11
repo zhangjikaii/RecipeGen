@@ -1,200 +1,186 @@
-# RecipeGen：基于知识图谱的食谱检索与生成系统
+# RecipeGen：知识图谱食谱检索与问答
 
-系统采用 **Neo4j GraphRAG：文本召回 → 图谱扩展 → 带来源引用的回答**。真实测试图谱有 **5,898 条 RecipeGen 食谱记录、44,802 行原始步骤**，已建立 5,898 条本地 E5 文本向量及 ONLINE 索引；支持关键词、语义与 RRF 混合检索，食材提及筛选、详情、来源和子图查看。数据库不可用时明确报错，不切换人工示例。
+RecipeGen 将原始食谱构建为 **Neo4j 知识图谱**，结合 **BM25 关键词检索、本地 E5 语义排序与图谱条件查询**，通过 **DeepSeek API** 完成意图判断、候选重排和带来源的中文问答。
 
-默认 `grounded` 模式由程序按图谱原始步骤组织回答，不调用大模型。可选 `local` 模式让本地模型选择已有菜谱 ID；`api` 分支已预留结构化中文改写与引用校验，未配置时返回原始步骤并标记 API 待接入。**LLM API 尚未提供，当前不声称真实 API 改写已通过。**
+网页提供两个入口：**食谱探索**按想用、排除的食材查找食谱；**厨神交流**只需输入问题，支持多轮追问，由 LLM 决定直接回答还是检索食谱。
 
-GraphRAG 方法与边界见 [GraphRAG 设计](docs/GraphRAG设计.md)，节点、关系与来源约束见 [图谱 Schema](docs/图谱Schema.md)，后续配置见 [LLM 接入说明](docs/LLM接入说明.md)。原接口说明见 [食谱检索与生成系统](docs/食谱检索与生成系统.md)，简历描述见 [简历项目表述](docs/简历项目表述.md)。
+## 页面展示
 
-2026-10-04 的开发机器验收记录：**787 项代码测试、182 项真实接口／Neo4j 回读检查、69 项真实网页检查通过**，另有 27 项实际回退界面检查；API 仍待配置。[发布验收摘要](reports/发布验收.md)说明这些历史结果与本次源码发布的范围。完整原始报告、运行日志和本机数据未随仓库发布，相关结果不代表克隆后的机器已经部署成功。
+### 首页
 
-## 仓库包含什么
+![RecipeGen 首页：食谱探索与厨神交流](docs/images/home.png)
 
-**这是源码仓库，克隆后不会自带 Neo4j 数据库、真实测试语料、媒体、模型权重、向量检查点或已激活的语义索引。** 仓库保留应用、构建脚本、测试、文档及 20 条人工演示数据。上述规模来自开发机器上的历史构建；新机器必须完成下方重建步骤，再以自己生成的报告和 `/api/system/status` 核对范围。
+### 食谱探索
 
-原始数据从 [RecipeGen 数据集](https://huggingface.co/datasets/RUOXUAN123/RecipeGen)获取，数据集与预训练模型的授权以各来源为准。本次源码发布没有审核或重新授予第三方数据及模型的使用权。
+![按希望使用和排除的食材检索食谱](docs/images/explore.png)
 
-## 已验证的数据与范围
+### 厨神交流
 
-| 内容 | 实际范围 |
+![厨神交流：提示词输入与多轮对话](docs/images/chef-chat.png)
+
+## 检索与问答流程
+
+```text
+用户问题 + 最近对话
+        ↓
+DeepSeek 意图路由与食材条件解析
+        ├─ 一般交流 / 烹饪常识 → 直接回答
+        └─ 查找食谱 / 原步骤追问
+                 ↓
+          BM25 全库关键词候选 A
+          Cypher 完整条件候选 C → 仅在 C 内 E5 评分 → 语义候选 B
+                 ↓
+          A ∪ B ∪ C → 条件复核 → 合法候选池 C
+                 ↓
+          候选池内 BM25 / E5 双排名 RRF 融合
+                 ↓
+          一阶图谱证据回读：食材提及 + 全部有序原步骤 + Source
+                 ↓
+          有界完整上下文 → DeepSeek API 重排
+                 ↓
+          选定食谱原步骤 → DeepSeek API 问答 → 引用与数字校验
+```
+
+食谱探索直接执行检索并展示结果，不调用问答 LLM。厨神交流先把追问整理为独立问题及所需／排除食材，再进入同一检索链；LLM 不生成或执行任意 Cypher。
+
+| 环节 | 实际方法 |
 |---|---|
-| 来源 | `RUOXUAN123/RecipeGen`，只使用 `test.zip`、`test-video.zip` |
-| 固定 revision | `2506260d8cb193ecdb18ac31fc725ffec43f6602` |
-| 基础图谱 | 5,898 条分来源菜谱记录、44,802 行步骤、296 个规则食材实体 |
-| 基础规模 | 159,040 个节点、425,687 条关系 |
-| 派生文本索引 | 5,898 个 `RecipeGenText:TextEmbedding` 节点及 `TEXT_OF` 关系；384 维、余弦检索 |
-| 媒体清单 | 46,553 张图片、1,512 个视频的真实归档成员定位信息 |
-| 原生系统验收 | 状态、番茄/鸡蛋检索、否定食材排除、详情、子图、grounded 生成及步骤引用校验通过 |
-| 本地模型功能检查 | 实际调用 MLX Qwen3-VL-2B 4bit，已知 ID 选择、原步骤组装与来源校验通过，未回退 |
+| 图谱条件 | 参数化 Cypher 查询完整候选集合 C，支持多食材同时满足及排除；语义评分之前完成筛选 |
+| 关键词 | 本地 BM25，语料为每条食谱的标题和全部原步骤；`k1=1.5`、`b=0.75` |
+| 语义 | 本地 `intfloat/multilingual-e5-small`，384 维、均值池化、L2 归一化；问题用 `query: `、食谱用 `passage: ` 前缀，仅对 C 内全部向量做精确余弦评分 |
+| 融合 | 全库 BM25 正分 Top50、图谱先筛 E5 Top50 与 C 合并并复核条件；对完整合法池的 BM25/E5 排名做 RRF，`k=60`，BM25 零分不贡献关键词项 |
+| 上下文 | RRF 后回读一阶图证据；最多 20 条完整食谱、60,000 JSON 字符预算，超限减少候选，保留所选食谱全部原步骤；问答使用重排后的 1～3 条 |
+| 大模型 | DeepSeek 的 Chat Completions API；路由、重排与问答分别调用，已验证配置为 `deepseek-flash`；问答不使用本地 LLM |
+| 输出校验 | 重排 ID 必须是输入候选的完整排列；问答证据 ID 必须指向原步骤，数字需来自引用文本；失败明确返回状态与原始证据 |
 
-记录保留跨归档来源身份，未声称去重为 5,898 道独立菜。2026-10-04 的原生系统检查来自实际 Neo4j 读取；生成为 `grounded`，`llm_called=false`。历史结果见 [发布验收摘要](reports/发布验收.md)，数据方法见 [测试集图谱构建](docs/测试集图谱构建.md)及 [历史 Neo4j 部署记录](docs/用户Neo4j部署.md)。
+**图谱 C 是条件集合，没有第三个 RRF 排名。** 当前实现的最终合法池由图谱确定，BM25/E5 改变池内排序；图谱扩展补充步骤与来源证据，不额外创造食谱候选。原有 Neo4j 向量索引用于就绪核验，当前路径不做全库 ANN TopK 后过滤。
 
-同日的本地模型检查记录 `llm_called=true`、`fallback=false`、`effective_mode=local_selection_grounded_answer`，结构与来源检查通过。该次只向模型提供文本上下文（`num_images=0`），选择一条已有菜谱；不证明自由生成新配方或语义效果。仓库不包含该本地模型。
+进一步说明见 [GraphRAG 设计](docs/GraphRAG设计.md)与 [厨神交流](docs/厨神交流.md)。
 
-**图片与视频批处理均保持停止。** 系统可读取已入库的图像描述候选，不重新下载或识别媒体。验收快照有 3,831 个图像观察节点，覆盖 2,220 张不同图片；同图可留有多次观察。详情按原图像 ID 选择已有观察，排序时间来自公开成功检查点；缺少可核验时间时标注 `latest_unverified`。这些数量不是视觉准确率，也不表示全量媒体已处理。
+## 数据与验证
 
-## 本地启动
+开发机器使用 [RUOXUAN123/RecipeGen](https://huggingface.co/datasets/RUOXUAN123/RecipeGen) 的 `test.zip`、`test-video.zip`，固定 revision 为 `2506260d8cb193ecdb18ac31fc725ffec43f6602`。保留两个归档的来源身份，共 **5,898 条食谱记录、44,802 行原始步骤**，没有跨归档去重。食材节点来自原文词典规则提及。
 
-在项目目录中使用 Python 3.11 或更新版本。首次准备应用环境：
+| 检索评测范围 | Precision@10 | Recall@10 |
+|---|---:|---:|
+| 32 条原始字段自动标注的条件回归查询，生产混合检索，DeepSeek 重排前 | **78.44%** | **41.65%** |
+
+指标为逐题宏平均；Precision@10 固定分母为 10，即使返回不足 10 条。查询与标签已查看过，另有 8 条 dev 单独记录。这是食材条件回归，**不是人工语义相关性或问答准确率评测**。核查发现 RRF 改变了多数 Top10 排名，但本组查询的命中数与仅 E5 相同；现有指标不能证明融合增益。
+
+单次真实聊天已完成 DeepSeek **意图路由 → 重排 → 问答**三次成功调用及真实 Neo4j 证据回读，未回退；结构、候选 ID、引用与数字检查通过，不代表回答的全部语义事实均已验证。发布范围和验证口径见 [发布验收摘要](reports/发布验收.md)。
+
+## 本地运行
+
+仓库包含源码、测试、文档、上述页面截图及手工演示数据。**真实语料、Neo4j 数据库、E5 权重、向量检查点、运行日志和凭据需要在本机自行准备，不随仓库发布。**
+
+以下命令在仓库根目录执行，使用 Python 3.11 或更新版本及可用的 Neo4j 实例。首次读取语料与下载 E5 需要联网；数据脚本只读取测试文本和媒体成员目录，不下载全量图片／视频负载。
+
+### 1. 安装与配置
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-```
-
-### 首次重建真实系统
-
-1. 在项目目录复制 `.env.example` 为 `.env`，填写自己 Neo4j 实例的 `NEO4J_URI`、`NEO4J_USER`、`NEO4J_PASSWORD`、`NEO4J_DATABASE`。凭据只保存在本机；建议为本项目准备独立数据库。
-2. 按 [测试集图谱构建](docs/测试集图谱构建.md)的步骤 1～4，读取固定 revision 的两个测试归档、生成图谱、离线校验并导入 Neo4j。现有 Neo4j 可使用文档中的导入脚本；macOS ARM64 的独立运行时安装属于可选路径。
-3. 需要语义或混合检索时，按下文准备 `.venv-mm` 文本运行时，下载固定 E5 权重，并运行完整 `build_text_index.py --import`。完成原生回读后，脚本在本机生成 `data/graphrag/index-manifest.json`。
-4. 启动服务并检查 `/api/system/status`。只建立基础图谱时可以使用 `keyword`；语义索引未就绪时 `hybrid` 明确回退，`semantic` 返回不可用。LLM API 可保持 disabled，原文回答不依赖它。
-
-```bash
+git clone https://github.com/zhangjikaii/RecipeGen.git
+cd RecipeGen
+python3 -m venv .venv-mm
+source .venv-mm/bin/activate
+python -m pip install -r requirements.txt -r requirements-text.txt
 cp .env.example .env
-# 编辑 .env 后，按测试集图谱构建文档重建并导入数据。
 ```
 
-首次读取语料和下载权重需要网络，时间与磁盘需求取决于来源及运行环境。默认测试语料脚本读取文本与媒体成员目录，不下载全部图片、视频负载。启动页面不替代数据重建。
+当前 E5 查询入口使用 `.venv-mm/bin/python`，因此请保留这个环境目录名。Windows 的子进程路径需先按平台调整；下面启动方式适用于 macOS／Linux。
 
-先启动已有的真实 Neo4j 数据库，再启动服务：
+编辑本地 `.env`，填写自己数据库与 API 的配置：
+
+```dotenv
+NEO4J_URI=bolt://127.0.0.1:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=填写自己的数据库密码
+NEO4J_DATABASE=neo4j
+RECIPEGEN_RETRIEVAL_MODE=hybrid
+RECIPEGEN_LLM_PROVIDER=chat_completions
+RECIPEGEN_LLM_BASE_URL=https://api.deepseek.com
+RECIPEGEN_LLM_MODEL=deepseek-flash
+RECIPEGEN_LLM_API_KEY=填写自己的API密钥
+RECIPEGEN_LLM_TIMEOUT=120
+```
+
+模型 ID 可替换为自己账户可用的 DeepSeek 模型。凭据仅放本地 `.env`，不要提交 Git；macOS／Linux 可执行 `chmod 600 .env`。食谱探索不依赖大模型 API，厨神交流需要完成 API 配置。
+
+需要新建本地 Neo4j 时，可使用仓库的 Docker Compose；填好 `.env` 后启动并等待数据库就绪。已有独立 Neo4j 实例可跳过此命令。
 
 ```bash
-source .venv/bin/activate
+docker compose --env-file .env up -d
+```
+
+### 2. 重建来源图谱
+
+```bash
+python scripts/build_test_corpus.py \
+  --archives test.zip test-video.zip \
+  --revision 2506260d8cb193ecdb18ac31fc725ffec43f6602 \
+  --output-dir data/test_graph
+python scripts/build_test_graph.py \
+  --records data/test_graph/records.jsonl --output data/test_graph
+python scripts/import_test_graph_neo4j.py --validate-only
+python scripts/import_test_graph_neo4j.py --report reports/local-graph-import.json
+```
+
+导入器读取 `.env`，导入后回读核验并激活构建；不删除既有图数据。为首次复现使用本项目的独立数据库。细节见 [测试集图谱构建](docs/测试集图谱构建.md)。
+
+### 3. 准备本地 E5 与文本索引
+
+```bash
+python scripts/prepare_text_model.py
+python scripts/build_text_index.py --device cpu --batch-size 8 --import
+```
+
+模型 revision 固定为 `614241f622f53c4eeff9890bdc4f31cfecc418b3`。权重下载至 `.runtime/text-model-cache/`；原文投影与可续跑向量检查点生成于 `data/graphrag/full/`，通过原生回读后生成 `data/graphrag/index-manifest.json`，并将 384 维向量写入 Neo4j 的 `RecipeGenText` 节点。BM25 复用同一原文投影。
+
+当前网页每条食谱一个向量，不要求人工分块。E5 的 512 token 上限可能截断长食谱的编码输入，原步骤仍完整保存在图谱，LLM 上下文回读全文。缺失模型、完整向量或正确构建身份时须查看实际错误／回退信息，页面打开不代表数据已就绪。
+
+### 4. 启动页面与核验状态
+
+```bash
 python -m recipegen serve --host 127.0.0.1 --port 8765
 ```
 
-打开 [本地界面](http://127.0.0.1:8765/)或 [API 文档](http://127.0.0.1:8765/docs)。`Ctrl+C` 停止服务。启动 Web 服务不会启动媒体批处理。
+打开 [网页](http://127.0.0.1:8765/)或 [API 文档](http://127.0.0.1:8765/docs)，并用 `/api/system/status` 核验自己的数据数量、E5 与 API 配置。启动网页不会启动媒体识别批处理。
 
-也可用项目管理脚本启动、查看或停止网页服务：
+## API
 
-```bash
-python scripts/manage_recipegen_system.py start
-python scripts/manage_recipegen_system.py status
-python scripts/manage_recipegen_system.py stop
-```
-
-默认端口为 `8765`。脚本停止前核对本项目进程的启动命令和工作目录；`status` 的健康检查仅表示网页服务可用，真实图谱状态以 `/api/system/status` 为准。
-
-连接使用 Settings / `NEO4J_URI`、`NEO4J_USER`、`NEO4J_PASSWORD`、`NEO4J_DATABASE`；历史本机部署也支持私密 `.runtime/active-neo4j.json` 或 `.runtime/local-neo4j.json`，这些文件不在仓库中。私密 JSON 须为权限 `600`，不要提交凭据。目录后端只执行参数化读取，要求唯一 `active+verified` 的 `recipegen-test-v1` 测试构建与固定 revision。
-
-新系统不需要先导入 `data/example_graph.json`；该文件属于旧演示，不能用来修复真实图谱连接错误。
-
-## 系统 API
-
-| 方法与路径 | 用途 |
+| 接口 | 用途 |
 |---|---|
-| `GET /api/system/status` | 真实数据身份、数量、模型可用状态与批处理状态 |
-| `POST /api/search` | `keyword` / `semantic` / `hybrid` 召回及食材提及筛选，返回原步骤、来源、检索执行信息 |
-| `GET /api/recipes/{id}` | 一条原菜谱详情 |
-| `GET /api/system/graph?recipe_id={id}` | 该菜谱的真实节点与关系子图 |
-| `POST /api/generate` | 从检索候选或显式菜谱 ID 组织带引用的回答 |
+| `GET /api/system/status` | 图谱身份、数量、模型就绪情况 |
+| `POST /api/search` | 食材筛选与混合检索，返回食谱、原步骤、来源及执行信息 |
+| `GET /api/recipes/{id}` | 原食谱详情 |
+| `GET /api/system/graph?recipe_id={id}` | 食谱证据子图 |
+| `POST /api/chat` | 提示词与最近对话，自动路由并执行检索问答 |
+| `POST /api/generate` | 显式检索条件或食谱 ID 的证据问答，API 调用需指定 `mode=api` |
 
 ```bash
 curl http://127.0.0.1:8765/api/system/status
+
 curl -X POST http://127.0.0.1:8765/api/search \
   -H 'Content-Type: application/json' \
-  -d '{"query":"番茄 鸡蛋","ingredients":["番茄","鸡蛋"],"excluded_ingredients":[],"retrieval_mode":"hybrid","limit":6}'
-```
+  -d '{"query":"番茄和鸡蛋怎么做","ingredients":["番茄","鸡蛋"],"excluded_ingredients":["香菜"],"retrieval_mode":"hybrid","limit":6}'
 
-`ingredients` 每项都须匹配已有规则提及，表示“记录提到这些食材”，不表示库存足够。“番茄不要鸡蛋”“不加洋葱”“without eggs”等否定片段合并到排除条件，显示在 `applied_filters` 中。中文别名映射为规范英文食材；英文短菜名保留标题关键词。
-
-`query` 最多 500 字符，生成 `question` 为 1～500 字符；食材与排除列表各最多 20 项，每项 1～80 个可打印字符。搜索 `limit` 为 1～20，生成 `limit` 为 1～3；不符合请求合同返回 `422`。
-
-`retrieval_mode` 可选三种模式，省略时采用后端 `RECIPEGEN_RETRIEVAL_MODE`（默认 hybrid）。混合检索结合最多 20 条关键词候选与 50 条向量候选，按 RRF（K=60）排序；原始图事实和来源需回读校验。响应 `retrieval.effective_mode`、`fallback_reason`、候选数量和 `graph_evidence` 表示实际执行路径。语义不可用时 hybrid 可明确回退 keyword，单独 semantic 请求返回不可用错误。有限候选为空不表示全库无匹配。
-
-默认生成：
-
-```bash
-curl -X POST http://127.0.0.1:8765/api/generate \
+curl -X POST http://127.0.0.1:8765/api/chat \
   -H 'Content-Type: application/json' \
-  -d '{"question":"用番茄和鸡蛋能做什么？","ingredients":["番茄","鸡蛋"],"mode":"grounded","limit":2}'
+  -d '{"message":"推荐一道用番茄和鸡蛋、不放香菜的菜，并依据原步骤说明做法。","history":[]}'
 ```
 
-也可提交检索结果中的 `recipe_ids`，最多 3 条；显式选菜仍检查问题及参数中的排除条件。响应包含 `answer`、`recipes`、`evidence`、`generation`、`validation` 和阶段 `trace`。无证据或没有原步骤时说明无法生成，不补造做法。
+追问时将前序 `user`／`assistant` 消息放入 `history`；最多 20 条，问题与历史合计最多 20,000 字符。聊天响应包含 `answer`、`recipes`、`evidence`、`route`、`generation` 和阶段 `trace`，可核对实际是否检索、调用 API 及发生回退。
 
-`"mode":"local"` 请求本地模型选择，不恢复媒体批处理。模型不可用、超时或返回未知 ID 等情况，会记录错误与 `fallback`，使用已有原步骤组织回答。应核对 `llm_called`、`effective_mode` 和单独的选择校验，不能仅凭最终回答可用认定模型选择通过。
-
-图像描述候选用于详情及子图展示；当前生成模型输入只包含标题、食材提及和步骤摘录，不纳入图像观察。
-
-`"mode":"api"` 通过 GraphRAG 上下文提供全部原步骤及证据 ID，供后续 API 做中文改写。未配置时保持 `pending_api=true`、`llm_called=false`，页面禁用 API 开关。填写后端 `.env` 并重启服务才启用，具体见 [LLM 接入说明](docs/LLM接入说明.md)。
-
-## 方法与限制
-
-```text
-问题 / 结构化食材条件
-        ↓
-中英文别名与否定片段处理
-        ↓
-关键词召回 / 本地 E5 文本向量召回
-        ↓
-RRF 混合排序 + 固定 Neo4j 一阶关系扩展
-        ↓
-原 Recipe / ordered Step / Source / 规则食材提及
-        ↓
-程序组织 / 可选本地 ID 选择 / 待接入 API 中文改写
-        ↓
-原步骤组织 + 来源引用 + 结构与证据校验
-```
-
-食材来自词典规则抽取，**不是完整配料表**；没有完整结构化用量或总烹饪时长。原步骤已有数字仍保留，不把步骤时间相加或视频时长换算成总用时。提及排除不构成忌口、过敏或饮食安全保证。
-
-视觉描述、对象和对齐关系均保留为模型候选。当前未做语义抽取准确率、推荐准确率或直接 LLM 对照评测。系统采用显式检索与验证工作流，未实现模型自主规划。
-
-本轮每条食谱只构建一个文本向量，标题和有序步骤以 `passage: ` 编码，问题以 `query: ` 编码。E5 最多接收 512 token，**95 条原文超长并截断编码**；全文哈希、token 数和截断标记保留，图谱展开仍提供全部原步骤。原数据存在菜名包含翻译说明或缺失提示的情况；保留原始来源，不把功能检查当作检索质量评测。
-
-文本检查点由本机运行生成在 `data/graphrag/full/`，全量范围和原生回读通过后才激活 `data/graphrag/index-manifest.json`。这些产物不随源码发布；已有自己检查点时可以续跑：
+## 开发与边界
 
 ```bash
-.venv-mm/bin/python scripts/build_text_index.py --device cpu --batch-size 8 --import
+python -m pytest -q
 ```
 
-该命令只处理 Neo4j 原始文本与派生索引，不下载或识别图片、视频。权重由准备脚本下载到忽略的 `.runtime/text-model-cache`，固定模型版本和运行方法见 GraphRAG 设计。
+离线测试检查检索、接口、上下文与校验合同；真实 Neo4j 和收费 API 验证需要另行配置并显式运行，不能把历史报告当作新机器的运行结果。
 
-新机器可单独准备文本运行时，已有 `.venv-mm` 时复用该目录：
+- 食材关系表示原文提及，**不是完整配料表**；排除查询不保证忌口或过敏安全，系统不推算未知总烹饪时间。
+- 问答基于已有食谱与原步骤，不声称生成的新配方已经验证；引用与数字校验不能替代全部语义核查。
+- 图片／视频节点保留来源与目录关联；当前主要流程为文本检索问答，不在启动时运行视觉批处理。
+- `data/example_graph.json` 是手工演示，旧 CLI／SQLite 入口保留用于功能演示，真实 `/api/search` 与 `/api/chat` 不以它替代 Neo4j。
 
-```bash
-python3.11 -m venv .venv-mm
-.venv-mm/bin/python -m pip install -r requirements-text.txt
-.venv-mm/bin/python scripts/prepare_text_model.py
-.venv-mm/bin/python scripts/build_text_index.py --device cpu --limit 8
-.venv-mm/bin/python scripts/build_text_index.py --device cpu --batch-size 8 --import
-```
-
-需要先有已验证的原始 Neo4j 测试图谱。小样本命令仅检查编码，不导入或激活完整索引；全量命令可续跑。应用查询使用 CPU，最多一个编码进程，同问题在服务内缓存 32 条，不在磁盘保存用户问题。下载脚本只获取固定 E5 模型文件。
-
-## 旧 20 条人工演示的兼容入口
-
-| 真实系统 | 旧人工演示 |
-|---|---|
-| `/api/system/status`、`/api/search`、`/api/recipes/{id}`、`/api/system/graph`、`/api/generate` | `/api/status`、`/api/graph`、`/api/recommend` |
-| 真实测试图谱，Neo4j `RecipeGen` 命名空间 | 20 条手工菜谱，SQLite 或 `RG*` 演示图谱 |
-| 食材提及筛选，完整配方与时长未知 | 手工完整字段可演示库存、时间、辣味、缺料过滤 |
-
-旧 CLI 仍用于兼容演示：
-
-```bash
-python -m recipegen import data/example_graph.json --db var/recipegen.sqlite3
-python -m recipegen demo --question '番茄和鸡蛋，20分钟内，不吃辣'
-python -m recipegen evaluate --output reports/evaluation.json
-```
-
-早期 50 条手工功能回归只证明指定演示用例通过，不是新系统真实数据或模型准确率。上述 `evaluate` 命令在本机重新生成报告，历史范围见 [发布验收摘要](reports/发布验收.md)。
-
-## 代码与证据
-
-| 文件 | 职责 |
-|---|---|
-| `recipegen/catalog.py` | 只读目录、别名/否定处理、详情与子图 |
-| `recipegen/system_generation.py` | 原记录证据组织、可选本地选择、引用与输出校验 |
-| `recipegen/graphrag_retrieval.py` | 官方 VectorCypherRetriever 图扩展、RRF、固定范围与全文哈希核验 |
-| `recipegen/graphrag_answer.py` | 待接入 API 的结构化改写、步骤/引用/数字校验与回退 |
-| `recipegen/text_embeddings.py`、`scripts/local_text_embedding.py` | 本地离线 E5 问题编码、模型身份校验及服务内查询缓存 |
-| `scripts/build_text_index.py` | 全量文本检查点、派生节点导入、索引与原生回读 |
-| `recipegen/system_api_models.py`、`recipegen/app.py` | 请求校验、新系统 API 与兼容接口 |
-| `scripts/local_recipe_generation.py` | 本地模型选择进程接口 |
-| `scripts/build_test_corpus.py`、`scripts/build_test_graph.py` | 测试文本/归档成员读取与来源图谱构建 |
-| `reports/发布验收.md` | 公开源码范围与历史验收摘要 |
-| `scripts/manage_recipegen_system.py` | 本项目网页服务的 start/status/stop |
-
-离线合同测试使用 `python -m pytest -q`；与实际数据库、本地模型运行、语义效果评测分别记录。真实接口／浏览器验收还需要自己重建的数据库与文本模型，浏览器检查需安装 Playwright 和对应浏览器，不能将历史浏览器报告当作当前机器结果。历史媒体方法见 [多模态语义处理](docs/多模态语义处理.md)，其中处理命令不表示批处理当前运行。
+核心代码：`recipegen/catalog.py`（条件与来源）、`recipegen/production_hybrid.py`（BM25/E5/RRF）、`recipegen/graphrag_retrieval.py`（图谱检索与证据回读）、`recipegen/chef_chat.py`（意图路由）、`recipegen/web_rag_answer.py`（API 重排与问答）、`recipegen/text_embeddings.py`（本地 E5）。第三方数据与模型的授权以各原始来源为准。

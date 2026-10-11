@@ -64,3 +64,8 @@ var/
 *.fvecs
 *.index
 *.hnsw
+
+# User-approved UI screenshots only.
+!/docs/images/home.png
+!/docs/images/explore.png
+!/docs/images/chef-chat.png
