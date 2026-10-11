@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f4ed">
+  <meta name="description" content="和厨神聊聊今天想吃什么、怎么做，以及厨房里的小问题。">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <script>try{const t=localStorage.getItem("recipegen-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch{}</script>
+  <title>厨神交流 · RecipeGen</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/ui.js" defer></script>
+  <script src="/static/chef-chat.js" defer></script>
+</head>
+<body data-page="chef-chat" class="chef-chat-page">
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="RecipeGen 首页"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M8 22h24c-1 8-5 12-12 12S9 30 8 22Z"/><path d="M6 21h28M14 14c-4-4 4-6 0-10M22 15c-4-4 4-6 0-10M29 16c-3-3 3-5 0-8"/></svg></span><span>RecipeGen</span></a>
+      <nav class="header-actions" aria-label="页面导航">
+        <a href="/?view=explore">食谱探索</a><a href="/?view=chat" aria-current="page">厨神交流</a>
+        <button type="button" id="theme-toggle" class="theme-button" aria-label="切换深色模式" aria-pressed="false">深色</button>
+      </nav>
+    </header>
+    <main id="main-content" class="chef-chat-main" tabindex="-1">
+      <div class="chat-topbar"><button id="chat-new" type="button" class="secondary-button chat-new-button">新对话<span aria-hidden="true">＋</span></button></div>
+      <section id="chat-welcome" class="chat-welcome" aria-labelledby="chat-title">
+        <div class="chef-avatar chef-avatar-large" role="img" aria-label="厨神头像"><span aria-hidden="true">👨‍🍳</span></div>
+        <h1 id="chat-title">今天，想聊点什么？</h1>
+        <div class="chat-suggestions" aria-label="试试这样问">
+          <button type="button" data-prompt="我有西兰花和胡萝卜，不想用花生，能做什么？">冰箱里的食材能做什么？</button>
+          <button type="button" data-prompt="炒菜时怎么判断油温是否合适？">怎么判断炒菜的油温？</button>
+          <button type="button" data-prompt="推荐一道含有番茄和鸡蛋的食谱，告诉我关键步骤。">番茄和鸡蛋怎么做？</button>
+        </div>
+      </section>
+      <section id="chat-messages" class="chat-messages" aria-label="与厨神的对话" role="log" aria-live="polite" aria-relevant="additions" hidden></section>
+      <div id="chat-composer-dock" class="chat-composer-dock">
+        <div id="chat-error" class="chat-error error-banner" role="alert" hidden><p id="chat-error-text"></p><button id="chat-retry" class="text-button" type="button">重新发送</button></div>
+        <form id="chat-form" class="chat-composer">
+          <label class="visually-hidden" for="chat-input">给厨神发送消息</label>
+          <textarea id="chat-input" rows="1" maxlength="1000" placeholder="问问厨神…" autocomplete="off"></textarea>
+          <div class="chat-composer-actions"><span id="chat-status" class="chat-status" role="status"></span><button id="chat-cancel" type="button" class="secondary-button" hidden>停止</button><button id="chat-send" type="submit" class="primary-button" aria-label="发送消息" disabled>发送<span aria-hidden="true">↑</span></button></div>
+        </form>
+      </div>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

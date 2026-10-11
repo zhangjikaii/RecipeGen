@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f4ed">
+  <meta name="description" content="输入希望用到与不想使用的食材，直接查找食谱。">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <script>try{const t=localStorage.getItem("recipegen-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch{}</script>
+  <title>食谱探索 · RecipeGen</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/ui.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body data-page="explore">
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="RecipeGen 首页"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M8 22h24c-1 8-5 12-12 12S9 30 8 22Z"/><path d="M6 21h28M14 14c-4-4 4-6 0-10M22 15c-4-4 4-6 0-10M29 16c-3-3 3-5 0-8"/></svg></span><span>RecipeGen</span></a>
+      <nav class="header-actions" aria-label="页面导航">
+        <a href="/?view=explore" aria-current="page">食谱探索</a><a href="/?view=chat">厨神交流</a>
+        <button type="button" id="theme-toggle" class="theme-button" aria-label="切换深色模式" aria-pressed="false">深色</button>
+      </nav>
+    </header>
+    <main id="main-content" class="explore-main" tabindex="-1">
+<header class="page-heading"><h1>食谱探索</h1></header>
+<div class="system-notice" id="system-notice" hidden role="status"></div>
+<div class="workspace" id="workspace">
+  <aside class="search-panel panel" aria-label="食材条件">
+    <form id="search-form">
+      <div class="field-group">
+        <label class="field-label" for="ingredients">想用的食材</label>
+        <input id="ingredients" type="text" maxlength="400" placeholder="例如：番茄、鸡蛋" aria-describedby="search-error" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="excluded-ingredients">不想用的食材</label>
+        <input id="excluded-ingredients" type="text" maxlength="400" placeholder="例如：花生、辣椒" autocomplete="off">
+      </div>
+      <button type="submit" id="search-button" class="primary-button">
+        <span id="search-button-label">查找食谱</span><span class="button-arrow" aria-hidden="true">↗</span><span class="spinner" hidden></span>
+      </button>
+    </form>
+    <div id="search-error" class="error-banner" hidden role="alert"></div>
+  </aside>
+  <div class="results-column" id="results-column" hidden>
+    <section class="search-results" id="search-results" aria-labelledby="results-title" aria-busy="false">
+      <div class="results-heading" id="results-heading" hidden><h2 id="results-title">搜索结果</h2><span class="result-count" id="result-count" role="status" aria-live="polite" aria-atomic="true"></span></div>
+      <div id="search-loading" class="loading-panel" hidden role="status">
+        <div class="loading-copy"><h3>正在查找食谱</h3></div>
+        <div class="skeleton-grid" aria-hidden="true"><div class="skeleton-card"><span></span><span></span><span></span></div><div class="skeleton-card"><span></span><span></span><span></span></div></div>
+      </div>
+      <div id="empty-state" class="empty-state" hidden><div class="empty-copy"><h3>没有找到符合条件的食谱</h3><p>试着减少食材条件。</p></div></div>
+      <div class="recipe-grid" id="recipe-grid"></div>
+      <details id="retrieval-summary" class="retrieval-summary" hidden>
+        <summary>查看检索依据</summary>
+        <div class="disclosure-content">
+          <div class="search-limitations" id="search-limitations" hidden></div>
+          <div id="retrieval-badges" class="badges"></div><p id="retrieval-description"></p>
+          <details class="retrieval-details"><summary>检索过程与证据范围</summary><ol id="retrieval-trace" class="trace-list"></ol><p id="retrieval-disclosure" class="generation-disclosure"></p></details>
+        </div>
+      </details>
+    </section>
+  </div>
+</div>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

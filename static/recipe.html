@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f4ed">
+  <meta name="description" content="查看食谱的原始步骤、食材提及与来源。">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <script>try{const t=localStorage.getItem("recipegen-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch{}</script>
+  <title>食谱详情 · RecipeGen</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/ui.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body data-page="recipe">
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="RecipeGen 首页"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M8 22h24c-1 8-5 12-12 12S9 30 8 22Z"/><path d="M6 21h28M14 14c-4-4 4-6 0-10M22 15c-4-4 4-6 0-10M29 16c-3-3 3-5 0-8"/></svg></span><span>RecipeGen</span></a>
+      <nav class="header-actions" aria-label="页面导航">
+        <a href="/?view=explore">食谱探索</a><a href="/?view=chat">厨神交流</a>
+        <button type="button" id="theme-toggle" class="theme-button" aria-label="切换深色模式" aria-pressed="false">深色</button>
+      </nav>
+    </header>
+    <main id="main-content" class="recipe-main" tabindex="-1">
+<div class="page-back"><a id="back-to-results" href="/?view=explore">← 返回食谱探索</a></div>
+<header class="page-heading detail-heading"><h1 id="detail-title">食谱详情</h1></header>
+<div class="system-notice" id="system-notice" hidden role="status"></div>
+<article class="recipe-detail panel">
+  <div id="detail-loading" class="detail-loading" role="status">正在读取原始步骤与来源…</div>
+  <div id="detail-error" class="error-banner" role="alert" hidden></div>
+  <div id="detail-body" class="detail-body" hidden></div>
+  <div class="detail-actions"><a href="/?view=chat" class="secondary-button">与厨神聊聊<span aria-hidden="true">↗</span></a></div>
+</article>
+<details id="graph-section" class="graph-section" hidden>
+  <summary id="graph-title">查看知识关联</summary>
+  <div class="disclosure-content">
+    <div id="graph-status" class="field-help" role="status"></div>
+    <div id="graph-canvas" class="graph-canvas"></div>
+    <div class="graph-legend"><span><i class="recipe-color"></i>食谱</span><span><i class="ingredient-color"></i>食材</span><span><i class="step-color"></i>步骤</span><span><i class="source-color"></i>来源 / 媒体</span></div>
+    <div id="graph-node-detail" class="graph-node-detail" aria-live="polite">选择节点，查看关联。</div>
+  </div>
+</details>
+    </main>
+    <footer class="site-footer">
+      <a href="/about">数据与使用说明</a>
+    </footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

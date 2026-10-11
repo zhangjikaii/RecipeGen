@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f4ed">
+  <meta name="description" content="了解食谱来源、图像识别候选及食材筛选的使用边界。">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <script>try{const t=localStorage.getItem("recipegen-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch{}</script>
+  <title>数据与使用说明 · RecipeGen</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/ui.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body data-page="about">
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="RecipeGen 首页"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M8 22h24c-1 8-5 12-12 12S9 30 8 22Z"/><path d="M6 21h28M14 14c-4-4 4-6 0-10M22 15c-4-4 4-6 0-10M29 16c-3-3 3-5 0-8"/></svg></span><span>RecipeGen</span></a>
+      <nav class="header-actions" aria-label="页面导航">
+        <a href="/?view=explore">食谱探索</a><a href="/?view=chat">厨神交流</a>
+        <button type="button" id="theme-toggle" class="theme-button" aria-label="切换深色模式" aria-pressed="false">深色</button>
+      </nav>
+    </header>
+    <main id="main-content" class="about-main" tabindex="-1">
+<header class="page-heading"><h1>数据与使用说明</h1></header>
+<div class="system-notice" id="system-notice" hidden role="status"></div>
+<article class="about-content">
+  <section class="about-section" aria-labelledby="about-data-title">
+    <h2 id="about-data-title">食谱从哪里来</h2>
+    <p>RecipeGen 检索已有食谱，保留原始步骤与来源。检索后的回答可展开查看出处，不能将缺失的用时、分量与完整配方当作原文事实。</p>
+    <p id="dataset-label">正在读取数据来源</p>
+    <div class="stats-strip" aria-label="当前知识库规模">
+      <div><strong id="stat-recipes">待连接</strong><span>食谱记录</span></div>
+      <div><strong id="stat-steps">待连接</strong><span>原始步骤</span></div>
+      <div><strong id="stat-ingredients">待连接</strong><span>食材实体</span></div>
+      <div><strong id="stat-images">待连接</strong><span>原始图片</span></div>
+      <div><strong id="stat-recognized">待连接</strong><span>已有识别的图片</span></div>
+    </div>
+    <details class="source-note"><summary>来源与版本</summary><p id="source-note">知识库信息读取中…</p></details>
+  </section>
+  <section class="about-section" aria-labelledby="about-images-title">
+    <h2 id="about-images-title">图片如何使用</h2>
+    <p>食谱原始图片与图像识别候选会分别标注；识别候选可能有误，不能作为配方事实。</p>
+  </section>
+  <section class="about-section" aria-labelledby="about-retrieval-title">
+    <h2 id="about-retrieval-title">如何检索与回答</h2>
+    <p>食谱探索按你输入的食材条件，先从知识图谱筛选候选，再用 E5 排序，直接展示食谱。厨神交流只需发送消息，DeepSeek 会判断是否需要查找食谱：需要时先检索、重排，再依据原始步骤回答；普通厨房交流可直接回答。</p>
+    <p>查找食谱后的回答会显示出处；直接交流属于模型的一般建议。检索回答可展开查看原文出处，回退时会显式提示。聊天内容保存在当前浏览器标签页，新对话可清空；API 出错时可以重试。</p>
+  </section>
+  <section class="about-section" aria-labelledby="about-ingredients-title">
+    <h2 id="about-ingredients-title">忌口与过敏食材</h2>
+    <p>筛选条件依据原文提及的食材。食材记录可能不完整，排除某种食材不代表已经验证饮食或过敏安全。使用前请核对完整原文。</p>
+  </section>
+  <details class="service-details"><summary>检索服务</summary><div class="disclosure-content"><p id="service-label">正在读取服务信息</p><p id="retrieval-capability">正在读取文本检索能力…</p></div></details>
+</article>
+    </main>
+    <footer class="site-footer">
+      <a href="/about" aria-current="page">数据与使用说明</a>
+    </footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
