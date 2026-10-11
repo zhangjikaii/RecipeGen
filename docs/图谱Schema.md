@@ -51,7 +51,7 @@ flowchart LR
 - `text_sha256`、`token_count`、`truncated`、`max_tokens`：绑定完整原文，并披露 512 token 截断。
 - `kg_import_namespace='recipegen-text-v1'`、`semantics='derived_text_embedding'`：与基础事实分开保存。
 
-`TEXT_OF` 只连接同一已验证构建中的 Recipe。`VectorCypherRetriever` 通过固定关系展开步骤、规则食材和来源；程序回读原文和 ID 集合，并核验全文哈希。相似度用于召回排序，不是正确率或概率。检索与 RRF 方法见 [GraphRAG 设计](GraphRAG设计.md)。
+`TEXT_OF` 只连接同一已验证构建中的 Recipe。当前 hybrid 先查询完整图条件候选，在池内用 E5 精确评分，并与 BM25 双排名 RRF 融合；之后固定一阶查询回读步骤、规则食材和来源，核验原文与 ID。原 ONLINE 向量索引用于身份及就绪核验，不在该链执行 ANN；`VectorCypherRetriever` 保留在历史代码路径。相似度用于排序，不是正确率或概率。方法见 [GraphRAG 设计](GraphRAG设计.md)。
 
 ## 可选多模态扩展
 
