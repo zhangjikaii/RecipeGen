@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Literal
 import re
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from .models import StrictModel
 
@@ -37,3 +37,32 @@ class GenerateRequest(SearchRequest):
         if any(not re.fullmatch(r"[\w.:-]{1,120}", value) for value in values) or len(set(values)) != len(values):
             raise ValueError("菜谱 ID 必须合法且不能重复")
         return values
+
+
+class ChatMessage(StrictModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=4000, strict=True)
+
+    @field_validator("content")
+    @classmethod
+    def printable_content(cls, value: str) -> str:
+        value = value.strip()
+        if not value or any(ord(c) < 32 and c not in "\n\r\t" for c in value):
+            raise ValueError("聊天内容必须包含可打印文字")
+        return value
+
+
+class ChatRequest(StrictModel):
+    message: str = Field(min_length=1, max_length=1000, strict=True)
+    history: list[ChatMessage] = Field(default_factory=list, max_length=20)
+
+    @field_validator("message")
+    @classmethod
+    def printable_message(cls, value: str) -> str:
+        return ChatMessage.printable_content(value)
+
+    @model_validator(mode="after")
+    def bounded_history(self):
+        if len(self.message) + sum(len(item.content) for item in self.history) > 20_000:
+            raise ValueError("聊天上下文最多 20000 字符")
+        return self

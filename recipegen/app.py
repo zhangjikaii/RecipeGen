@@ -4,17 +4,19 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import PROJECT_ROOT, Settings
 from .models import RecommendRequest
 from .pipeline import Recommender
-from .system_api_models import GenerateRequest, SearchRequest
+from .system_api_models import ChatRequest, GenerateRequest, SearchRequest
 
 
 def create_app(settings: Settings | None = None, recommender: Recommender | None = None,
-               *, catalog=None, generator=None, retriever=None, api_answerer=None) -> FastAPI:
+               *, catalog=None, generator=None, retriever=None, api_answerer=None, chat_service=None) -> FastAPI:
     settings = settings or Settings.from_env()
 
     @asynccontextmanager
@@ -33,6 +35,17 @@ def create_app(settings: Settings | None = None, recommender: Recommender | None
     app.state.generator = generator
     app.state.retriever = retriever
     app.state.api_answerer = api_answerer
+    app.state.chat_service = chat_service
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(request, exception):
+        if request.url.path == "/api/chat":
+            # Pydantic's default details echo invalid input. Chat input can
+            # contain private text; the client only needs a stable message.
+            from .chef_chat import ChefChatError
+            error = ChefChatError("invalid_input")
+            return JSONResponse(status_code=422, content=error.as_result())
+        return await request_validation_exception_handler(request, exception)
 
     def real_catalog():
         if app.state.catalog is None:
@@ -55,9 +68,15 @@ def create_app(settings: Settings | None = None, recommender: Recommender | None
 
     def external_answerer():
         if app.state.api_answerer is None:
-            from .graphrag_answer import GraphRAGAnswerer
-            app.state.api_answerer = GraphRAGAnswerer(PROJECT_ROOT, settings=settings)
+            from .web_rag_answer import WebRAGAnswerer
+            app.state.api_answerer = WebRAGAnswerer(PROJECT_ROOT, settings=settings)
         return app.state.api_answerer
+
+    def chef_chat():
+        if app.state.chat_service is None:
+            from .chef_chat import ChefChatService
+            app.state.chat_service = ChefChatService(settings, retriever=real_retriever, answerer=external_answerer)
+        return app.state.chat_service
 
     def graph_unavailable():
         return HTTPException(503, "真实 Neo4j 食谱图谱暂不可用，请检查数据库连接；系统不会切换为人工示例数据。")
@@ -98,8 +117,8 @@ def create_app(settings: Settings | None = None, recommender: Recommender | None
             result = real_retriever().search(request.query, ingredients=request.ingredients,
                                              excluded_ingredients=request.excluded_ingredients, limit=request.limit,
                                              mode=request.retrieval_mode or settings.retrieval_mode)
-            result["trace"] = [{"stage": "graphrag_retrieval", "status": result.get("retrieval", {}).get("status", "ok"),
-                                "elapsed_ms": round((time.perf_counter()-started)*1000, 2)}]
+            result.setdefault("trace", []).append({"stage": "graphrag_retrieval", "status": result.get("retrieval", {}).get("status", "ok"),
+                                                    "elapsed_ms": round((time.perf_counter()-started)*1000, 2)})
             return result
         except GraphRAGUnavailable:
             raise HTTPException(503, "GraphRAG 语义检索尚未就绪，请检查文本模型和索引；也可选择关键词检索。") from None
@@ -146,6 +165,7 @@ def create_app(settings: Settings | None = None, recommender: Recommender | None
         started = time.perf_counter()
         try:
             if request.recipe_ids:
+                retrieval_trace = []
                 recipes = [real_catalog().recipe(identifier) for identifier in request.recipe_ids]
                 implicit_excluded = parse_query_filters(request.question)["excluded"]
                 excluded = {normalize_ingredient(name) for name in request.excluded_ingredients} | set(implicit_excluded)
@@ -159,8 +179,10 @@ def create_app(settings: Settings | None = None, recommender: Recommender | None
             else:
                 retrieved = real_retriever().search(request.question, ingredients=request.ingredients,
                                                     excluded_ingredients=request.excluded_ingredients,
-                                                    limit=max(6, request.limit), mode=request.retrieval_mode or settings.retrieval_mode)
+                                                    limit=20 if request.mode == "api" else max(6, request.limit),
+                                                    mode=request.retrieval_mode or settings.retrieval_mode)
                 recipes = retrieved["recipes"]
+                retrieval_trace = retrieved.get("trace", [])
                 retrieval = {**retrieved.get("retrieval", {}), **retrieved.get("applied_filters", {})}
             retrieval_ms = round((time.perf_counter() - started) * 1000, 2)
             kwargs = {"ingredients": request.ingredients,
@@ -171,8 +193,8 @@ def create_app(settings: Settings | None = None, recommender: Recommender | None
             else:
                 result = real_generator().generate(request.question, recipes, mode=request.mode, **kwargs)
             result["retrieval"] = retrieval
-            result.setdefault("trace", []).insert(0, {"stage": "graph_retrieval", "status": "ok",
-                                                        "elapsed_ms": retrieval_ms})
+            result["trace"] = [*retrieval_trace, {"stage": "graph_retrieval", "status": "ok",
+                                                  "elapsed_ms": retrieval_ms}, *result.get("trace", [])]
             return result
         except RecipeNotFound:
             raise HTTPException(404, "所选食谱已不存在，请重新检索") from None
@@ -184,6 +206,17 @@ def create_app(settings: Settings | None = None, recommender: Recommender | None
             raise HTTPException(422, "食谱证据或生成条件未通过校验") from None
         except Exception:
             raise graph_unavailable() from None
+
+    @app.post("/api/chat")
+    def chat(request: ChatRequest):
+        from .chef_chat import ChefChatError
+        try:
+            return chef_chat().chat(request.message, [item.model_dump() for item in request.history])
+        except ChefChatError as error:
+            return JSONResponse(status_code=error.status_code, content=error.as_result())
+        except Exception:
+            error = ChefChatError("service_error")
+            return JSONResponse(status_code=error.status_code, content=error.as_result())
 
     def service() -> Recommender:
         if app.state.recommender is None:
@@ -225,7 +258,28 @@ def create_app(settings: Settings | None = None, recommender: Recommender | None
         app.mount("/static", StaticFiles(directory=static), name="static")
 
         @app.get("/", include_in_schema=False)
-        def index():
-            return FileResponse(static / "index.html")
+        def index(view: str | None = None):
+            # Both workspaces share the main entry; the fixed mapping also
+            # keeps refresh/bookmarks usable without interpolating a path.
+            filename = {"explore": "explore.html", "chat": "compose.html"}.get(view, "index.html")
+            return FileResponse(static / filename)
+
+        @app.get("/explore", include_in_schema=False)
+        def explore_page():
+            return FileResponse(static / "explore.html")
+
+        @app.get("/recipes/{recipe_id}", include_in_schema=False)
+        def recipe_page(recipe_id: str):
+            # The page loads the original recipe through the existing read-only API.
+            # Never interpolate an ID into a filesystem path.
+            return FileResponse(static / "recipe.html")
+
+        @app.get("/compose", include_in_schema=False)
+        def compose_page():
+            return FileResponse(static / "compose.html")
+
+        @app.get("/about", include_in_schema=False)
+        def about_page():
+            return FileResponse(static / "about.html")
 
     return app
