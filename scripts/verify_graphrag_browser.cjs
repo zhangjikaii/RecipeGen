@@ -1,32 +1,17 @@
 /* 文本 GraphRAG 的真实浏览器验收。
  * 仅访问本机现有服务，读取图谱和 grounded 回答，不启动模型生成或媒体任务。
- * 运行：node scripts/verify_graphrag_browser.cjs [--fallback-only] [--base-url http://127.0.0.1:8765]
- * 使用已安装的 Playwright 与 Chrome；不会安装或下载依赖。
+ * 运行：node scripts/verify_graphrag_browser.cjs
  */
 "use strict";
 const fs = require("fs"), path = require("path"), os = require("os"), assert = require("assert");
 const root = path.resolve(__dirname, "..");
-const args = process.argv.slice(2);
-let baseURL = "http://127.0.0.1:8765", fallbackOnly = false;
-for (let i = 0; i < args.length; i++) {
-  if (args[i] === "--fallback-only") fallbackOnly = true;
-  else if (args[i] === "--base-url" && args[i + 1]) baseURL = args[++i];
-  else throw new Error(`未知参数：${args[i]}`);
-}
-const base = new URL(baseURL);
-assert(base.protocol === "http:" && ["127.0.0.1", "localhost", "[::1]"].includes(base.hostname) && !base.username && !base.password, "只允许无凭据的本机 HTTP 地址");
-baseURL = base.origin;
-function playwright() {
-  const candidates = [process.env.PLAYWRIGHT_MODULE_PATH, "playwright", path.join(os.homedir(), ".cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright")].filter(Boolean);
-  for (const candidate of candidates) { try { return require(candidate); } catch (error) { if (error.code !== "MODULE_NOT_FOUND") throw error; } }
-  throw new Error("找不到已安装的 Playwright；请先配置运行环境。本脚本不会下载依赖。");
-}
-function chromePath() {
-  const candidates = [process.env.CHROME_EXECUTABLE_PATH, "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser", process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, "Google/Chrome/Application/chrome.exe"), process.env.PROGRAMFILES && path.join(process.env.PROGRAMFILES, "Google/Chrome/Application/chrome.exe")].filter(Boolean);
-  return candidates.find((candidate) => fs.existsSync(candidate));
-}
+const baseURL = "http://127.0.0.1:8765";
+const args = process.argv.slice(2), fallbackOnly = args.includes("--fallback-only");
+assert(args.every((arg) => arg === "--fallback-only"), "仅支持 --fallback-only 参数");
 const reportPath = path.join(root, fallbackOnly ? "reports/graphrag-browser-fallback.json" : "reports/graphrag-browser-smoke.json");
 const screenshots = path.join(root, "reports/graphrag-browser-screenshots");
+const executablePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const playwright = require(path.join(os.homedir(), ".cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright"));
 fs.mkdirSync(screenshots, { recursive: true });
 const report = { schema_version: "recipegen-graphrag-browser-v1", started_at: new Date().toISOString(), status: "running",
   scope: fallbackOnly ? "real_http_hybrid_keyword_fallback_browser_smoke" : "real_http_text_graphrag_and_grounded_browser_smoke", base_url: baseURL, checks: {}, searches: [],
@@ -38,9 +23,8 @@ function sameIDs(a, b) { return a.length === b.length && new Set(a).size === a.l
 function detailBody(value) { return value.recipe || value; }
 function safeURL(value) { try { const url = new URL(value); return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password; } catch (_) { return false; } }
 (async () => {
-  const executablePath = chromePath();
-  browser = await playwright().chromium.launch({ ...(executablePath ? { executablePath } : {}), headless: true });
-  report.browser = { version: browser.version(), executable: executablePath || "installed_playwright_browser", isolated_context: true };
+  browser = await playwright.chromium.launch({ executablePath, headless: true });
+  report.browser = { version: browser.version(), executable: executablePath, isolated_context: true };
   const context = await browser.newContext({ viewport: { width: 1280, height: 1000 }, reducedMotion: "reduce" });
   const page = await context.newPage(); page.setDefaultTimeout(130000);
   page.on("pageerror", (error) => report.page_errors.push(error.message));

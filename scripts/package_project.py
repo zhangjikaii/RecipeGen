@@ -15,6 +15,9 @@ ROOT_FILES = {
 }
 DATA_FILES = {"data/README.md", "data/example_graph.json", "data/evaluation_cases.json"}
 REPORT_FILES = {"reports/发布验收.md"}
+SCREENSHOT_FILES = {
+    "docs/images/home.png", "docs/images/explore.png", "docs/images/chef-chat.png",
+}
 SOURCE_SUFFIXES = {
     "recipegen": {".py"}, "scripts": {".py", ".cjs"}, "tests": {".py"},
     "static": {".html", ".css", ".js"}, "skills": {".md"},
@@ -46,13 +49,13 @@ def publishable(path: Path) -> bool:
         return False
     if path.name.startswith(".env") and name != ".env.example":
         return False
-    if name in ROOT_FILES or name in DATA_FILES or name in REPORT_FILES or name == "docs/neo4j_mapping.example.json":
+    if name in ROOT_FILES or name in DATA_FILES or name in REPORT_FILES or name in SCREENSHOT_FILES or name == "docs/neo4j_mapping.example.json":
         return True
     return len(relative.parts) > 1 and path.suffix in SOURCE_SUFFIXES.get(relative.parts[0], set())
 
 
 def project_files():
-    candidates = [ROOT / name for name in ROOT_FILES | DATA_FILES | REPORT_FILES | {"docs/neo4j_mapping.example.json"}]
+    candidates = [ROOT / name for name in ROOT_FILES | DATA_FILES | REPORT_FILES | SCREENSHOT_FILES | {"docs/neo4j_mapping.example.json"}]
     for name in SOURCE_SUFFIXES:
         directory = ROOT / name
         if directory.is_dir() and not directory.is_symlink():
